@@ -6,15 +6,19 @@ import { renderPanelButtons } from './panels.js'
 import { createWorkers, getValidMoves, canMoveWorker, moveWorker, advanceWorkerTurns } from './workers.js'
 import { harvestResources } from './harvest.js'
 import { applyMysteryEffects, renderMysteryEvents } from './mystery.js'
+import { createTechState, unlockNextTech, renderTechTreeModal } from './techtree.js'
 
 const board = createBoard()
 const resources = createResources()
 const cpuResources = createResources()
 const turnState = createTurnState()
 const workers = createWorkers(board)
+const playerTech = createTechState()
+const cpuTech = createTechState()
 
 let selectedWorkerId = null
 let lastMysteryEvents = []
+let isTechTreeOpen = false
 
 const app = document.querySelector('#app')
 
@@ -52,6 +56,7 @@ function render() {
       </div>
 
       ${renderTurnButton()}
+      ${isTechTreeOpen ? renderTechTreeModal(playerTech) : ''}
     </main>
   `
 }
@@ -59,8 +64,29 @@ function render() {
 render()
 
 app.addEventListener('click', (event) => {
+  if (event.target.closest('#open-tech-tree')) {
+    isTechTreeOpen = true
+    render()
+    return
+  }
+
+  if (isTechTreeOpen) {
+    if (event.target.closest('#close-tech-tree') || event.target.id === 'tech-tree-modal') {
+      isTechTreeOpen = false
+      render()
+      return
+    }
+
+    const unlockButton = event.target.closest('[data-unlock-line]')
+    if (unlockButton) {
+      unlockNextTech(playerTech, resources, unlockButton.dataset.unlockLine)
+      render()
+    }
+    return
+  }
+
   if (event.target.closest('#next-turn')) {
-    const harvest = harvestResources(board, workers)
+    const harvest = harvestResources(board, workers, { player: playerTech, cpu: cpuTech })
     addResources(resources, harvest.player)
     addResources(cpuResources, harvest.cpu)
     lastMysteryEvents = applyMysteryEffects(board, workers, { player: resources, cpu: cpuResources })

@@ -41,12 +41,31 @@ describe('harvestResources', () => {
     expect(totals.player).toEqual({ food: 0, production: 0, gold: 0 })
   })
 
-  it('？マスにいる労働者からは（Issue #14実装まで）資源を得られない', () => {
+  it('？マスにいる労働者からは資源を得られない（？マスの効果はmystery.jsが別途処理する）', () => {
     const board = makeBoard([{ row: 2, col: 2, city: null, terrain: 'mystery' }])
     const workers = [makeWorker('player', 2, 2)]
 
     const totals = harvestResources(board, workers)
 
     expect(totals.player).toEqual({ food: 0, production: 0, gold: 0 })
+  })
+
+  it('techStatesを渡すと、テックツリーの産出ボーナスが基礎値に加算される', () => {
+    const board = makeBoard([{ row: 0, col: 0, city: null, terrain: 'food' }])
+    const workers = [makeWorker('player', 0, 0)]
+    const techStates = { player: { agriculture: 2, architecture: 0, currency: 0 }, cpu: { agriculture: 0, architecture: 0, currency: 0 } }
+
+    const totals = harvestResources(board, workers, techStates)
+
+    expect(totals.player.food).toBe(3)
+  })
+
+  it('techStatesを省略した場合はボーナスなし（基礎値のみ）', () => {
+    const board = makeBoard([{ row: 0, col: 0, city: null, terrain: 'food' }])
+    const workers = [makeWorker('player', 0, 0)]
+
+    const totals = harvestResources(board, workers)
+
+    expect(totals.player.food).toBe(1)
   })
 })

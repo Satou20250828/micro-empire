@@ -3,9 +3,9 @@ export function renderPanelButtons() {
     <div class="flex gap-2">
       <button
         type="button"
-        disabled
-        title="テックツリー（近日公開）"
-        class="flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full bg-stone-200 text-lg opacity-50"
+        id="open-tech-tree"
+        title="テックツリー"
+        class="flex h-9 w-9 items-center justify-center rounded-full bg-stone-200 text-lg hover:bg-stone-300"
       >
         🔬
       </button>
