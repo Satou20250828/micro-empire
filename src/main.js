@@ -17,6 +17,7 @@ import { createTechState, unlockNextTech, renderTechTreeModal } from './techtree
 import { renderCpuStatusModal } from './cpuStatus.js'
 import { runCpuTurn } from './cpuAi.js'
 import { determineWinner, renderVictoryModal } from './victory.js'
+import { renderRulesModal } from './rules.js'
 
 const board = createBoard()
 const resources = createResources()
@@ -30,6 +31,7 @@ let selectedWorkerId = null
 let lastMysteryEvents = []
 let isTechTreeOpen = false
 let isCpuStatusOpen = false
+let isRulesOpen = false
 let gameResult = null
 let isVictoryModalOpen = false
 
@@ -98,6 +100,7 @@ function render() {
       ${isTechTreeOpen ? renderTechTreeModal(playerTech) : ''}
       ${isCpuStatusOpen ? renderCpuStatusModal(cpuResources, cpuTech) : ''}
       ${isVictoryModalOpen ? renderVictoryModal(gameResult) : ''}
+      ${isRulesOpen ? renderRulesModal() : ''}
     </main>
   `
 }
@@ -119,6 +122,7 @@ app.addEventListener('click', (event) => {
 
   if (event.target.closest('#open-tech-tree')) {
     isCpuStatusOpen = false
+    isRulesOpen = false
     isTechTreeOpen = true
     render()
     return
@@ -126,7 +130,16 @@ app.addEventListener('click', (event) => {
 
   if (event.target.closest('#open-cpu-status')) {
     isTechTreeOpen = false
+    isRulesOpen = false
     isCpuStatusOpen = true
+    render()
+    return
+  }
+
+  if (event.target.closest('#open-rules')) {
+    isTechTreeOpen = false
+    isCpuStatusOpen = false
+    isRulesOpen = true
     render()
     return
   }
@@ -159,6 +172,14 @@ app.addEventListener('click', (event) => {
   if (isCpuStatusOpen) {
     if (event.target.closest('#close-cpu-status') || event.target.id === 'cpu-status-modal') {
       isCpuStatusOpen = false
+      render()
+    }
+    return
+  }
+
+  if (isRulesOpen) {
+    if (event.target.closest('#close-rules') || event.target.id === 'rules-modal') {
+      isRulesOpen = false
       render()
     }
     return
