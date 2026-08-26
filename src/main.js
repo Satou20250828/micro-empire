@@ -72,7 +72,7 @@ function render() {
     : []
 
   app.innerHTML = `
-    <main class="relative flex min-h-screen flex-col items-center gap-6 bg-amber-50 p-4 pb-24 text-stone-800">
+    <main class="relative flex min-h-screen flex-col items-center gap-6 bg-amber-50 p-4 text-stone-800">
       <header class="flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
         <h1 class="text-2xl font-bold text-amber-600 sm:text-3xl">🏛️ 小さな帝国</h1>
         <div class="flex flex-wrap items-center gap-3">
@@ -80,6 +80,7 @@ function render() {
           ${renderTurnCounter(turnState)}
           ${renderDifficultySelector(difficulty, Boolean(gameResult))}
           ${renderPanelButtons()}
+          ${gameResult ? '' : renderTurnButton()}
           ${gameResult ? '<span class="rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white">🏁 ゲーム終了</span>' : ''}
         </div>
       </header>
@@ -98,7 +99,6 @@ function render() {
         ${renderMysteryEvents(lastMysteryEvents)}
       </div>
 
-      ${gameResult ? '' : renderTurnButton()}
       ${isTechTreeOpen ? renderTechTreeModal(playerTech) : ''}
       ${isCpuStatusOpen ? renderCpuStatusModal(cpuResources, cpuTech) : ''}
       ${isVictoryModalOpen ? renderVictoryModal(gameResult) : ''}

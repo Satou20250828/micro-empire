@@ -17,15 +17,19 @@ export function renderTurnCounter(turnState) {
 
 export function renderTurnButton() {
   return `
-    <button
-      id="next-turn"
-      type="button"
-      class="group fixed bottom-4 right-4 flex h-14 items-center overflow-hidden rounded-full bg-amber-500 text-white shadow-lg transition-colors hover:bg-amber-600 active:bg-amber-700"
-    >
-      <span class="max-w-0 overflow-hidden whitespace-nowrap pl-0 text-sm font-semibold opacity-0 transition-all duration-300 ease-out group-hover:max-w-[10rem] group-hover:pl-4 group-hover:opacity-100">
+    <div class="group relative inline-flex">
+      <button
+        id="next-turn"
+        type="button"
+        class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-base text-white shadow transition-colors hover:bg-amber-600 active:bg-amber-700"
+      >
+        ▶
+      </button>
+      <span
+        class="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded bg-stone-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-active:opacity-100"
+      >
         ターンを進める
       </span>
-      <span class="flex h-14 w-14 flex-shrink-0 items-center justify-center text-2xl">▶</span>
-    </button>
+    </div>
   `
 }
