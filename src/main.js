@@ -16,7 +16,7 @@ import { applyMysteryEffects, renderMysteryEvents } from './mystery.js'
 import { createTechState, unlockNextTech, renderTechTreeModal } from './techtree.js'
 import { renderCpuStatusModal } from './cpuStatus.js'
 import { runCpuTurn } from './cpuAi.js'
-import { determineWinner, renderVictoryModal } from './victory.js'
+import { determineWinner, renderVictoryModal, renderDifficultySelector, DEFAULT_DIFFICULTY } from './victory.js'
 import { renderRulesModal } from './rules.js'
 
 const board = createBoard()
@@ -34,6 +34,7 @@ let isCpuStatusOpen = false
 let isRulesOpen = false
 let gameResult = null
 let isVictoryModalOpen = false
+let difficulty = DEFAULT_DIFFICULTY
 
 const app = document.querySelector('#app')
 
@@ -77,6 +78,7 @@ function render() {
         <div class="flex flex-wrap items-center gap-3">
           ${renderResources(resources)}
           ${renderTurnCounter(turnState)}
+          ${renderDifficultySelector(difficulty, Boolean(gameResult))}
           ${renderPanelButtons()}
           ${gameResult ? '<span class="rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white">🏁 ゲーム終了</span>' : ''}
         </div>
@@ -100,14 +102,25 @@ function render() {
       ${isTechTreeOpen ? renderTechTreeModal(playerTech) : ''}
       ${isCpuStatusOpen ? renderCpuStatusModal(cpuResources, cpuTech) : ''}
       ${isVictoryModalOpen ? renderVictoryModal(gameResult) : ''}
-      ${isRulesOpen ? renderRulesModal() : ''}
+      ${isRulesOpen ? renderRulesModal(difficulty) : ''}
     </main>
   `
 }
 
 render()
 
+app.addEventListener('change', (event) => {
+  if (event.target.id === 'difficulty-select') {
+    difficulty = event.target.value
+  }
+})
+
 app.addEventListener('click', (event) => {
+  if (event.target.closest('#reset-game')) {
+    window.location.reload()
+    return
+  }
+
   if (gameResult) {
     if (event.target.closest('#retry-game')) {
       window.location.reload()
@@ -203,6 +216,7 @@ app.addEventListener('click', (event) => {
       playerTech,
       cpuResources,
       cpuTech,
+      difficulty,
     })
     if (gameResult) isVictoryModalOpen = true
     selectedWorkerId = null
