@@ -8,6 +8,7 @@ import { harvestResources } from './harvest.js'
 import { applyMysteryEffects, renderMysteryEvents } from './mystery.js'
 import { createTechState, unlockNextTech, renderTechTreeModal } from './techtree.js'
 import { renderCpuStatusModal } from './cpuStatus.js'
+import { runCpuTurn } from './cpuAi.js'
 
 const board = createBoard()
 const resources = createResources()
@@ -105,6 +106,7 @@ app.addEventListener('click', (event) => {
   }
 
   if (event.target.closest('#next-turn')) {
+    runCpuTurn(board, workers, cpuResources, cpuTech)
     const harvest = harvestResources(board, workers, { player: playerTech, cpu: cpuTech })
     addResources(resources, harvest.player)
     addResources(cpuResources, harvest.cpu)
