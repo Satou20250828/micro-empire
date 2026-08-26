@@ -74,6 +74,10 @@ render()
 
 app.addEventListener('click', (event) => {
   if (gameResult) {
+    if (event.target.closest('#retry-game')) {
+      window.location.reload()
+      return
+    }
     if (event.target.closest('#close-victory') || event.target.id === 'victory-modal') {
       isVictoryModalOpen = false
       render()

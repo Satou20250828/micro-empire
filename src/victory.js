@@ -44,13 +44,22 @@ export function renderVictoryModal(result) {
         <div class="mb-2 text-4xl">${result.winner === 'player' ? '🎉' : '💻'}</div>
         <h2 class="mb-2 text-xl font-bold text-stone-800">${WINNER_LABEL[result.winner]}の勝利！</h2>
         <p class="mb-4 text-sm text-stone-600">勝因：${REASON_LABEL[result.reason]}</p>
-        <button
-          type="button"
-          id="close-victory"
-          class="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
-        >
-          閉じる
-        </button>
+        <div class="flex justify-center gap-2">
+          <button
+            type="button"
+            id="retry-game"
+            class="rounded bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
+          >
+            🔄 もう一度プレイ
+          </button>
+          <button
+            type="button"
+            id="close-victory"
+            class="rounded bg-stone-200 px-4 py-2 text-sm font-semibold text-stone-700 hover:bg-stone-300"
+          >
+            閉じる
+          </button>
+        </div>
       </div>
     </div>
   `
