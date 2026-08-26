@@ -26,9 +26,13 @@ function render() {
 
       <div class="flex flex-1 flex-col items-center justify-center gap-4">
         ${renderBoard(board)}
-        <div class="flex gap-4 text-sm text-stone-600">
+        <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-stone-600">
           <span>🏰 自都市</span>
           <span>🏯 CPU都市</span>
+          <span>🌾 食料</span>
+          <span>⚙️ 生産力</span>
+          <span>💰 金</span>
+          <span>❓ ？マス</span>
         </div>
       </div>
 
