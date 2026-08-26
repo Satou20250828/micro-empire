@@ -4,11 +4,11 @@ import { createResources, renderResources, addResources } from './resources.js'
 import { createTurnState, advanceTurn, renderTurnCounter, renderTurnButton } from './turn.js'
 import { renderPanelButtons } from './panels.js'
 import { createWorkers, getValidMoves, canMoveWorker, moveWorker, advanceWorkerTurns } from './workers.js'
-
-const TURN_YIELD = { food: 2, production: 1, gold: 1 }
+import { harvestResources } from './harvest.js'
 
 const board = createBoard()
 const resources = createResources()
+const cpuResources = createResources()
 const turnState = createTurnState()
 const workers = createWorkers(board)
 
@@ -57,9 +57,11 @@ render()
 
 app.addEventListener('click', (event) => {
   if (event.target.closest('#next-turn')) {
+    const harvest = harvestResources(board, workers)
+    addResources(resources, harvest.player)
+    addResources(cpuResources, harvest.cpu)
     advanceWorkerTurns(workers, board.size)
     advanceTurn(turnState)
-    addResources(resources, TURN_YIELD)
     selectedWorkerId = null
     render()
     return
