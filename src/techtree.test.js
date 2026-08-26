@@ -5,6 +5,7 @@ import {
   canUnlockNext,
   unlockNextTech,
   getProductionBonus,
+  getEffectiveCost,
 } from './techtree.js'
 
 describe('createTechState', () => {
@@ -76,5 +77,30 @@ describe('getProductionBonus', () => {
   it('4〜5段階目を解放していても数値ボーナスは3で頭打ちになる', () => {
     const techState = { agriculture: 5, architecture: 0, currency: 0 }
     expect(getProductionBonus(techState, 'food')).toBe(3)
+  })
+})
+
+describe('getEffectiveCost（資本主義によるコスト割引、Issue #22）', () => {
+  it('資本主義（貨幣5段階目）未解放なら通常コストのまま', () => {
+    const techState = { agriculture: 0, architecture: 0, currency: 4 }
+    expect(getEffectiveCost(techState, 'agriculture', 100)).toBe(100)
+  })
+
+  it('資本主義解放済みなら農業/建築ラインのコストが20%引きになる', () => {
+    const techState = { agriculture: 0, architecture: 0, currency: 5 }
+    expect(getEffectiveCost(techState, 'agriculture', 100)).toBe(80)
+    expect(getEffectiveCost(techState, 'architecture', 100)).toBe(80)
+  })
+
+  it('資本主義解放済みでも貨幣ライン自体のコストは割引されない', () => {
+    const techState = { agriculture: 0, architecture: 0, currency: 5 }
+    expect(getEffectiveCost(techState, 'currency', 100)).toBe(100)
+  })
+
+  it('unlockNextTechで割引後のコストが実際に消費される', () => {
+    const techState = { agriculture: 0, architecture: 0, currency: 5 }
+    const resources = { food: 8, production: 0, gold: 0 }
+    expect(unlockNextTech(techState, resources, 'agriculture')).toBe(true)
+    expect(resources.food).toBe(0)
   })
 })

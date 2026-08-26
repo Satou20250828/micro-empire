@@ -89,6 +89,70 @@ describe('runCpuTurn - 労働者の移動', () => {
 
     expect(workers[0]).toMatchObject({ row: 0, col: 0 })
   })
+
+  it('機械工学（建築4段階目）解放後は、資源マスに乗るまで1ターンに2マス移動できる', () => {
+    // (0,0)cpu都市 → (1,0)はプレイヤーが占有していて移動不可 →
+    // 唯一動ける(0,1)？マスへ1マス目、そこから食料マスの(0,2)へ2マス目、で2マス移動する
+    const board = makeBoard([
+      { row: 0, col: 0, city: 'cpu', terrain: null },
+      { row: 1, col: 0, city: null, terrain: 'gold' },
+      { row: 0, col: 1, city: null, terrain: 'mystery' },
+      { row: 0, col: 2, city: null, terrain: 'food' },
+    ])
+    const workers = [makeWorker('cpu', 0, 0), makeWorker('player', 1, 0)]
+    const resources = { food: 0, production: 0, gold: 0 }
+    const techState = { agriculture: 0, architecture: 4, currency: 0 }
+
+    runCpuTurn(board, workers, resources, techState)
+
+    const cpuWorker = workers.find((worker) => worker.owner === 'cpu')
+    expect(cpuWorker).toMatchObject({ row: 0, col: 2, movedThisTurn: 2 })
+  })
+
+  it('機械工学未解放なら1ターンに1マスしか移動しない', () => {
+    const board = makeBoard([
+      { row: 0, col: 0, city: 'cpu', terrain: null },
+      { row: 1, col: 0, city: null, terrain: 'gold' },
+      { row: 0, col: 1, city: null, terrain: 'mystery' },
+      { row: 0, col: 2, city: null, terrain: 'food' },
+    ])
+    const workers = [makeWorker('cpu', 0, 0), makeWorker('player', 1, 0)]
+    const resources = { food: 0, production: 0, gold: 0 }
+    const techState = { agriculture: 0, architecture: 0, currency: 0 }
+
+    runCpuTurn(board, workers, resources, techState)
+
+    const cpuWorker = workers.find((worker) => worker.owner === 'cpu')
+    expect(cpuWorker).toMatchObject({ row: 0, col: 1, movedThisTurn: 1 })
+  })
+})
+
+describe('runCpuTurn - 農業革命による労働者追加', () => {
+  it('農業ラインが5段階目に到達した瞬間、CPU都市に労働者が1体追加される', () => {
+    const board = makeBoard([{ row: 0, col: 0, city: 'cpu', terrain: null }])
+    const workers = []
+    const resources = { food: 80, production: 0, gold: 0 }
+    const techState = { agriculture: 4, architecture: 0, currency: 0 }
+
+    runCpuTurn(board, workers, resources, techState)
+
+    expect(techState.agriculture).toBe(5)
+    const cpuWorkers = workers.filter((worker) => worker.owner === 'cpu')
+    expect(cpuWorkers).toHaveLength(1)
+    expect(cpuWorkers[0]).toMatchObject({ row: 0, col: 0 })
+  })
+
+  it('農業ラインが4段階目のままでは労働者は追加されない', () => {
+    const board = makeBoard([{ row: 0, col: 0, city: 'cpu', terrain: null }])
+    const workers = []
+    const resources = { food: 0, production: 0, gold: 0 }
+    const techState = { agriculture: 4, architecture: 0, currency: 0 }
+
+    runCpuTurn(board, workers, resources, techState)
+
+    expect(techState.agriculture).toBe(4)
+    expect(workers).toHaveLength(0)
+  })
 })
 
 describe('runCpuTurn - テックの自動解放', () => {

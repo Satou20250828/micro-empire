@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { createBoard } from './board.js'
 import {
   createWorkers,
+  addWorker,
   getAdjacentCells,
   getValidMoves,
   canMoveWorker,
@@ -33,6 +34,20 @@ describe('createWorkers', () => {
         expect(worker.row).toBe(cpuCity.row)
         expect(worker.col).toBe(cpuCity.col)
       })
+  })
+})
+
+describe('addWorker', () => {
+  it('指定した陣営の都市マスに労働者を1体追加する', () => {
+    const board = createBoard()
+    const workers = createWorkers(board)
+    const playerCity = board.cells.find((cell) => cell.city === 'player')
+
+    addWorker(workers, board, 'player')
+
+    const playerWorkers = workers.filter((worker) => worker.owner === 'player')
+    expect(playerWorkers).toHaveLength(3)
+    expect(playerWorkers[2]).toMatchObject({ row: playerCity.row, col: playerCity.col })
   })
 })
 
@@ -89,6 +104,20 @@ describe('canMoveWorker / getValidMoves', () => {
     ]
     expect(getValidMoves(workers, workers[0], 5)).toEqual([])
   })
+
+  it('moveLimitを2にすると、1回移動しただけではまだ移動できる（機械工学の効果、Issue #22）', () => {
+    const workers = [
+      { id: 'player-0', owner: 'player', row: 2, col: 2, turnsAtPosition: 1, movedThisTurn: 1 },
+    ]
+    expect(getValidMoves(workers, workers[0], 5, 2)).not.toEqual([])
+  })
+
+  it('moveLimitに達すると、それ以上は移動できない', () => {
+    const workers = [
+      { id: 'player-0', owner: 'player', row: 2, col: 2, turnsAtPosition: 1, movedThisTurn: 2 },
+    ]
+    expect(getValidMoves(workers, workers[0], 5, 2)).toEqual([])
+  })
 })
 
 describe('moveWorker', () => {
@@ -99,7 +128,7 @@ describe('moveWorker', () => {
     expect(worker.row).toBe(2)
     expect(worker.col).toBe(3)
     expect(worker.turnsAtPosition).toBe(1)
-    expect(worker.movedThisTurn).toBe(true)
+    expect(worker.movedThisTurn).toBe(1)
   })
 })
 
@@ -118,7 +147,7 @@ describe('advanceWorkerTurns', () => {
     ]
     advanceWorkerTurns(workers, 5)
     expect(workers[0].turnsAtPosition).toBe(1)
-    expect(workers[0].movedThisTurn).toBe(false)
+    expect(workers[0].movedThisTurn).toBe(0)
   })
 
   it('同じマスに3ターン連続滞在すると、4ターン目に自動で隣接マスへ強制移動する', () => {
@@ -131,7 +160,16 @@ describe('advanceWorkerTurns', () => {
     const stayedAtSameCell = worker.row === 2 && worker.col === 2
     expect(stayedAtSameCell).toBe(false)
     expect(worker.turnsAtPosition).toBe(1)
-    expect(worker.movedThisTurn).toBe(false)
+    expect(worker.movedThisTurn).toBe(0)
+  })
+
+  it('exemptOwnersに含まれる陣営は、3ターン滞在しても強制移動されない（品種改良の効果、Issue #22）', () => {
+    const workers = [
+      { id: 'player-0', owner: 'player', row: 2, col: 2, turnsAtPosition: 3, movedThisTurn: false },
+    ]
+    advanceWorkerTurns(workers, 5, ['player'])
+
+    expect(workers[0]).toMatchObject({ row: 2, col: 2, turnsAtPosition: 4 })
   })
 })
 

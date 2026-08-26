@@ -37,15 +37,22 @@ export function rollMysteryEffect() {
 }
 
 // 盤面上の？マスにいる各労働者について効果を抽選し、所属陣営の資源プールへ反映する。
-// 資源はマイナスにならないようクランプする。画面表示用に発生イベントの一覧を返す。
-export function applyMysteryEffects(board, workers, resourcePools) {
+// 資源はマイナスにならないようクランプする。lossExemptOwnersに含まれる陣営は、
+// テックツリー「産業化」の効果でマイナス効果が発生しなくなる（Issue #22）。
+// 画面表示用に発生イベントの一覧を返す。
+export function applyMysteryEffects(board, workers, resourcePools, lossExemptOwners = []) {
+  const exemptSet = new Set(lossExemptOwners)
   const events = []
 
   workers.forEach((worker) => {
     const cell = board.cells.find((c) => c.row === worker.row && c.col === worker.col)
     if (!cell || cell.terrain !== 'mystery') return
 
-    const effect = rollMysteryEffect()
+    let effect = rollMysteryEffect()
+    if (effect.type === 'loss' && exemptSet.has(worker.owner)) {
+      effect = { type: 'nothing', resource: null, amount: 0 }
+    }
+
     if (effect.type !== 'nothing') {
       const pool = resourcePools[worker.owner]
       pool[effect.resource] = Math.max(0, pool[effect.resource] + effect.amount)

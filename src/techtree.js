@@ -1,6 +1,7 @@
 // 3系統×5段階＝計15技術。各系統は前提条件でつながった一直線（配列の順番どおりにしか解放できない）。
 // 4〜5段階目の特殊効果（居座り制限撤廃・2マス移動・労働者3体目・？マスリスク消滅・コスト割引・
-// 勝利条件しきい値）はIssue #22で対応するため、ここでは`note`として説明のみ持たせる。
+// 勝利条件しきい値）はIssue #22で実装済み。効果の適用箇所は各利用側（workers.js/mystery.js/
+// victory.js/main.js/cpuAi.js）を参照。
 export const TECH_LINES = {
   agriculture: {
     label: '農業',
@@ -57,11 +58,23 @@ export function getNextTech(techState, lineKey) {
   return line.techs[unlockedCount]
 }
 
+const CAPITALISM_TIER = 5
+const CAPITALISM_DISCOUNT_RATE = 0.2
+const CAPITALISM_DISCOUNT_LINES = ['agriculture', 'architecture']
+
+// 「資本主義」（貨幣ライン5段階目）を解放した陣営は、農業/建築ラインの解放コストが
+// 20%引きになる（Issue #22）。
+export function getEffectiveCost(techState, lineKey, baseCost) {
+  const hasDiscount = techState.currency >= CAPITALISM_TIER && CAPITALISM_DISCOUNT_LINES.includes(lineKey)
+  return hasDiscount ? Math.round(baseCost * (1 - CAPITALISM_DISCOUNT_RATE)) : baseCost
+}
+
 export function canUnlockNext(techState, resources, lineKey) {
   const nextTech = getNextTech(techState, lineKey)
   if (!nextTech) return false
   const line = TECH_LINES[lineKey]
-  return resources[line.resource] >= nextTech.cost
+  const cost = getEffectiveCost(techState, lineKey, nextTech.cost)
+  return resources[line.resource] >= cost
 }
 
 export function unlockNextTech(techState, resources, lineKey) {
@@ -69,13 +82,14 @@ export function unlockNextTech(techState, resources, lineKey) {
 
   const line = TECH_LINES[lineKey]
   const nextTech = getNextTech(techState, lineKey)
-  resources[line.resource] -= nextTech.cost
+  const cost = getEffectiveCost(techState, lineKey, nextTech.cost)
+  resources[line.resource] -= cost
   techState[lineKey] += 1
   return true
 }
 
 // 1〜3段階目の産出ボーナス。4〜5段階目を解放していても数値ボーナスは3で頭打ち
-// （4〜5段階目の効果自体はIssue #22で別途実装する）。
+// （4〜5段階目の特殊効果は各利用側でこのtechStateを直接参照して適用する）。
 export function getProductionBonus(techState, resourceType) {
   const lineKey = RESOURCE_TO_LINE[resourceType]
   if (!lineKey) return 0
@@ -89,15 +103,17 @@ function renderTechCard(lineKey, tech, tierIndex, techState) {
   const isNext = tierNumber === unlockedCount + 1
 
   const statusLabel = isUnlocked ? '解放済み' : isNext ? '解放可能' : '未解放'
-  const effectLabel = tech.bonus ? `産出+${tech.bonus}` : `${tech.note}（今後実装予定）`
+  const effectLabel = tech.bonus ? `産出+${tech.bonus}` : tech.note
   const tone = isUnlocked
     ? 'border-emerald-400 bg-emerald-50'
     : isNext
       ? 'border-amber-400 bg-amber-50'
       : 'border-stone-300 bg-stone-100 opacity-70'
 
+  const resourceEmoji = { food: '🌾', production: '⚙️', gold: '💰' }[TECH_LINES[lineKey].resource]
+  const cost = getEffectiveCost(techState, lineKey, tech.cost)
   const button = isNext
-    ? `<button type="button" data-unlock-line="${lineKey}" class="mt-1 w-full rounded bg-amber-500 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600">解放する（${TECH_LINES[lineKey].resource === 'food' ? '🌾' : TECH_LINES[lineKey].resource === 'production' ? '⚙️' : '💰'}${tech.cost}）</button>`
+    ? `<button type="button" data-unlock-line="${lineKey}" class="mt-1 w-full rounded bg-amber-500 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600">解放する（${resourceEmoji}${cost}）</button>`
     : ''
 
   return `
