@@ -17,6 +17,22 @@ export function renderPanelButtons() {
       >
         🤖
       </button>
+      <button
+        type="button"
+        id="open-rules"
+        title="ルール確認"
+        class="flex h-9 w-9 items-center justify-center rounded-full bg-stone-200 text-lg hover:bg-stone-300"
+      >
+        📖
+      </button>
+      <button
+        type="button"
+        id="reset-game"
+        title="リセット（最初からやり直す）"
+        class="flex h-9 w-9 items-center justify-center rounded-full bg-stone-200 text-lg hover:bg-stone-300"
+      >
+        🔄
+      </button>
     </div>
   `
 }
