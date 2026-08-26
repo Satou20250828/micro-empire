@@ -53,6 +53,7 @@ npm run dev      # 開発サーバー起動
 npm run build    # 本番ビルド
 npm run lint     # ESLintチェック
 npm run format   # Prettier整形
+npm run test     # Vitestによるユニットテスト
 ```
 
 ## 📊 設計資料
