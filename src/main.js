@@ -9,6 +9,7 @@ import { applyMysteryEffects, renderMysteryEvents } from './mystery.js'
 import { createTechState, unlockNextTech, renderTechTreeModal } from './techtree.js'
 import { renderCpuStatusModal } from './cpuStatus.js'
 import { runCpuTurn } from './cpuAi.js'
+import { determineWinner, renderVictoryModal } from './victory.js'
 
 const board = createBoard()
 const resources = createResources()
@@ -22,6 +23,8 @@ let selectedWorkerId = null
 let lastMysteryEvents = []
 let isTechTreeOpen = false
 let isCpuStatusOpen = false
+let gameResult = null
+let isVictoryModalOpen = false
 
 const app = document.querySelector('#app')
 
@@ -41,6 +44,7 @@ function render() {
           ${renderResources(resources)}
           ${renderTurnCounter(turnState)}
           ${renderPanelButtons()}
+          ${gameResult ? '<span class="rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white">🏁 ゲーム終了</span>' : ''}
         </div>
       </header>
 
@@ -58,9 +62,10 @@ function render() {
         ${renderMysteryEvents(lastMysteryEvents)}
       </div>
 
-      ${renderTurnButton()}
+      ${gameResult ? '' : renderTurnButton()}
       ${isTechTreeOpen ? renderTechTreeModal(playerTech) : ''}
       ${isCpuStatusOpen ? renderCpuStatusModal(cpuResources, cpuTech) : ''}
+      ${isVictoryModalOpen ? renderVictoryModal(gameResult) : ''}
     </main>
   `
 }
@@ -68,6 +73,18 @@ function render() {
 render()
 
 app.addEventListener('click', (event) => {
+  if (gameResult) {
+    if (event.target.closest('#retry-game')) {
+      window.location.reload()
+      return
+    }
+    if (event.target.closest('#close-victory') || event.target.id === 'victory-modal') {
+      isVictoryModalOpen = false
+      render()
+    }
+    return
+  }
+
   if (event.target.closest('#open-tech-tree')) {
     isCpuStatusOpen = false
     isTechTreeOpen = true
@@ -113,6 +130,13 @@ app.addEventListener('click', (event) => {
     lastMysteryEvents = applyMysteryEffects(board, workers, { player: resources, cpu: cpuResources })
     advanceWorkerTurns(workers, board.size)
     advanceTurn(turnState)
+    gameResult = determineWinner({
+      playerResources: resources,
+      playerTech,
+      cpuResources,
+      cpuTech,
+    })
+    if (gameResult) isVictoryModalOpen = true
     selectedWorkerId = null
     render()
     return
