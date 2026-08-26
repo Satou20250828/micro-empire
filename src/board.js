@@ -86,7 +86,7 @@ function renderWorkerBadge(worker, selectedWorkerId) {
   const selection = isSelected ? 'scale-110 ring-2 ring-sky-500' : ''
   const stayBadge =
     worker.turnsAtPosition > 1
-      ? `<span class="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-stone-700 text-[9px] font-bold leading-none text-white">${worker.turnsAtPosition}</span>`
+      ? `<span class="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-stone-700 text-[10px] font-bold leading-none text-white sm:h-5 sm:w-5 sm:text-xs">${worker.turnsAtPosition}</span>`
       : ''
 
   return `
@@ -94,7 +94,7 @@ function renderWorkerBadge(worker, selectedWorkerId) {
       type="button"
       data-worker-id="${worker.id}"
       title="${worker.owner === 'player' ? '自軍の労働者' : 'CPUの労働者'}（滞在${worker.turnsAtPosition}ターン目）"
-      class="relative flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${style.bg} ${style.ring} ${selection}"
+      class="relative flex h-8 w-8 items-center justify-center rounded-full text-base shadow sm:h-10 sm:w-10 sm:text-xl ${style.bg} ${style.ring} ${selection}"
     >${style.emoji}${stayBadge}</button>
   `
 }
@@ -114,7 +114,7 @@ function renderCell(cell, { workersAtCell, selectedWorkerId, isValidMove }) {
 
   const workersMarkup = workersAtCell.length
     ? `
-      <div class="absolute inset-x-0 top-0.5 flex justify-center gap-0.5">
+      <div class="absolute inset-x-0 top-0 flex justify-center gap-1 p-0.5">
         ${workersAtCell.map((worker) => renderWorkerBadge(worker, selectedWorkerId)).join('')}
       </div>
     `
@@ -132,7 +132,7 @@ function renderCell(cell, { workersAtCell, selectedWorkerId, isValidMove }) {
 
 export function renderBoard(board, { workers = [], selectedWorkerId = null, validMoves = [] } = {}) {
   return `
-    <div class="mx-auto grid w-[clamp(280px,80vw,580px)] grid-cols-5 gap-1.5">
+    <div class="mx-auto grid w-[clamp(320px,90vw,580px)] grid-cols-5 gap-1.5">
       ${board.cells
         .map((cell) =>
           renderCell(cell, {
