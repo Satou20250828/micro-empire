@@ -11,9 +11,9 @@ export function renderPanelButtons() {
       </button>
       <button
         type="button"
-        disabled
-        title="CPU都市の状況（近日公開）"
-        class="flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full bg-stone-200 text-lg opacity-50"
+        id="open-cpu-status"
+        title="CPU都市の状況"
+        class="flex h-9 w-9 items-center justify-center rounded-full bg-stone-200 text-lg hover:bg-stone-300"
       >
         🤖
       </button>

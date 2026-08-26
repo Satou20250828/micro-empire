@@ -7,6 +7,7 @@ import { createWorkers, getValidMoves, canMoveWorker, moveWorker, advanceWorkerT
 import { harvestResources } from './harvest.js'
 import { applyMysteryEffects, renderMysteryEvents } from './mystery.js'
 import { createTechState, unlockNextTech, renderTechTreeModal } from './techtree.js'
+import { renderCpuStatusModal } from './cpuStatus.js'
 
 const board = createBoard()
 const resources = createResources()
@@ -19,6 +20,7 @@ const cpuTech = createTechState()
 let selectedWorkerId = null
 let lastMysteryEvents = []
 let isTechTreeOpen = false
+let isCpuStatusOpen = false
 
 const app = document.querySelector('#app')
 
@@ -57,6 +59,7 @@ function render() {
 
       ${renderTurnButton()}
       ${isTechTreeOpen ? renderTechTreeModal(playerTech) : ''}
+      ${isCpuStatusOpen ? renderCpuStatusModal(cpuResources, cpuTech) : ''}
     </main>
   `
 }
@@ -65,7 +68,15 @@ render()
 
 app.addEventListener('click', (event) => {
   if (event.target.closest('#open-tech-tree')) {
+    isCpuStatusOpen = false
     isTechTreeOpen = true
+    render()
+    return
+  }
+
+  if (event.target.closest('#open-cpu-status')) {
+    isTechTreeOpen = false
+    isCpuStatusOpen = true
     render()
     return
   }
@@ -80,6 +91,14 @@ app.addEventListener('click', (event) => {
     const unlockButton = event.target.closest('[data-unlock-line]')
     if (unlockButton) {
       unlockNextTech(playerTech, resources, unlockButton.dataset.unlockLine)
+      render()
+    }
+    return
+  }
+
+  if (isCpuStatusOpen) {
+    if (event.target.closest('#close-cpu-status') || event.target.id === 'cpu-status-modal') {
+      isCpuStatusOpen = false
       render()
     }
     return
