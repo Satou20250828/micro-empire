@@ -5,6 +5,7 @@ import { createTurnState, advanceTurn, renderTurnCounter, renderTurnButton } fro
 import { renderPanelButtons } from './panels.js'
 import { createWorkers, getValidMoves, canMoveWorker, moveWorker, advanceWorkerTurns } from './workers.js'
 import { harvestResources } from './harvest.js'
+import { applyMysteryEffects, renderMysteryEvents } from './mystery.js'
 
 const board = createBoard()
 const resources = createResources()
@@ -13,6 +14,7 @@ const turnState = createTurnState()
 const workers = createWorkers(board)
 
 let selectedWorkerId = null
+let lastMysteryEvents = []
 
 const app = document.querySelector('#app')
 
@@ -46,6 +48,7 @@ function render() {
           <span>❓ ？マス</span>
           <span>🧑‍🌾 労働者（数字は同じマスに滞在中のターン数）</span>
         </div>
+        ${renderMysteryEvents(lastMysteryEvents)}
       </div>
 
       ${renderTurnButton()}
@@ -60,6 +63,7 @@ app.addEventListener('click', (event) => {
     const harvest = harvestResources(board, workers)
     addResources(resources, harvest.player)
     addResources(cpuResources, harvest.cpu)
+    lastMysteryEvents = applyMysteryEffects(board, workers, { player: resources, cpu: cpuResources })
     advanceWorkerTurns(workers, board.size)
     advanceTurn(turnState)
     selectedWorkerId = null
