@@ -3,7 +3,14 @@ import { createBoard, renderBoard } from './board.js'
 import { createResources, renderResources, addResources } from './resources.js'
 import { createTurnState, advanceTurn, renderTurnCounter, renderTurnButton } from './turn.js'
 import { renderPanelButtons } from './panels.js'
-import { createWorkers, getValidMoves, canMoveWorker, moveWorker, advanceWorkerTurns } from './workers.js'
+import {
+  createWorkers,
+  addWorker,
+  getValidMoves,
+  canMoveWorker,
+  moveWorker,
+  advanceWorkerTurns,
+} from './workers.js'
 import { harvestResources } from './harvest.js'
 import { applyMysteryEffects, renderMysteryEvents } from './mystery.js'
 import { createTechState, unlockNextTech, renderTechTreeModal } from './techtree.js'
@@ -28,13 +35,38 @@ let isVictoryModalOpen = false
 
 const app = document.querySelector('#app')
 
+const ARCHITECTURE_MACHINERY_TIER = 4
+const ARCHITECTURE_INDUSTRIALIZATION_TIER = 5
+const AGRICULTURE_FALLOW_LIMIT_TIER = 4
+const AGRICULTURE_REVOLUTION_TIER = 5
+
 function getSelectedWorker() {
   return workers.find((worker) => worker.id === selectedWorkerId) ?? null
 }
 
+function getPlayerMoveLimit() {
+  return playerTech.architecture >= ARCHITECTURE_MACHINERY_TIER ? 2 : 1
+}
+
+function getStayLimitExemptOwners() {
+  const exempt = []
+  if (playerTech.agriculture >= AGRICULTURE_FALLOW_LIMIT_TIER) exempt.push('player')
+  if (cpuTech.agriculture >= AGRICULTURE_FALLOW_LIMIT_TIER) exempt.push('cpu')
+  return exempt
+}
+
+function getMysteryLossExemptOwners() {
+  const exempt = []
+  if (playerTech.architecture >= ARCHITECTURE_INDUSTRIALIZATION_TIER) exempt.push('player')
+  if (cpuTech.architecture >= ARCHITECTURE_INDUSTRIALIZATION_TIER) exempt.push('cpu')
+  return exempt
+}
+
 function render() {
   const selectedWorker = getSelectedWorker()
-  const validMoves = selectedWorker ? getValidMoves(workers, selectedWorker, board.size) : []
+  const validMoves = selectedWorker
+    ? getValidMoves(workers, selectedWorker, board.size, getPlayerMoveLimit())
+    : []
 
   app.innerHTML = `
     <main class="relative flex min-h-screen flex-col items-center gap-6 bg-amber-50 p-4 pb-24 text-stone-800">
@@ -108,7 +140,17 @@ app.addEventListener('click', (event) => {
 
     const unlockButton = event.target.closest('[data-unlock-line]')
     if (unlockButton) {
-      unlockNextTech(playerTech, resources, unlockButton.dataset.unlockLine)
+      const lineKey = unlockButton.dataset.unlockLine
+      const beforeTier = playerTech[lineKey]
+      const unlocked = unlockNextTech(playerTech, resources, lineKey)
+      if (
+        unlocked &&
+        lineKey === 'agriculture' &&
+        beforeTier === AGRICULTURE_REVOLUTION_TIER - 1 &&
+        playerTech.agriculture === AGRICULTURE_REVOLUTION_TIER
+      ) {
+        addWorker(workers, board, 'player')
+      }
       render()
     }
     return
@@ -127,8 +169,13 @@ app.addEventListener('click', (event) => {
     const harvest = harvestResources(board, workers, { player: playerTech, cpu: cpuTech })
     addResources(resources, harvest.player)
     addResources(cpuResources, harvest.cpu)
-    lastMysteryEvents = applyMysteryEffects(board, workers, { player: resources, cpu: cpuResources })
-    advanceWorkerTurns(workers, board.size)
+    lastMysteryEvents = applyMysteryEffects(
+      board,
+      workers,
+      { player: resources, cpu: cpuResources },
+      getMysteryLossExemptOwners(),
+    )
+    advanceWorkerTurns(workers, board.size, getStayLimitExemptOwners())
     advanceTurn(turnState)
     gameResult = determineWinner({
       playerResources: resources,
@@ -158,9 +205,13 @@ app.addEventListener('click', (event) => {
   if (cell && selectedWorker) {
     const row = Number(cell.dataset.row)
     const col = Number(cell.dataset.col)
-    if (canMoveWorker(workers, selectedWorker, row, col, board.size)) {
+    const moveLimit = getPlayerMoveLimit()
+    if (canMoveWorker(workers, selectedWorker, row, col, board.size, moveLimit)) {
       moveWorker(selectedWorker, row, col)
-      selectedWorkerId = null
+      // 機械工学解放後は1ターンに2マス移動できるため、移動回数が残っていれば選択状態を維持する
+      if (selectedWorker.movedThisTurn >= moveLimit) {
+        selectedWorkerId = null
+      }
       render()
       return
     }

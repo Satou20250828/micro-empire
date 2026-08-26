@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { checkVictory, determineWinner, RESOURCE_VICTORY_THRESHOLD } from './victory.js'
+import {
+  checkVictory,
+  determineWinner,
+  getResourceThreshold,
+  RESOURCE_VICTORY_THRESHOLD,
+} from './victory.js'
 
 function makeTechState(overrides = {}) {
   return { agriculture: 0, architecture: 0, currency: 0, ...overrides }
@@ -32,6 +37,27 @@ describe('checkVictory', () => {
   it('資源合計がしきい値未満なら勝利ではない', () => {
     const resources = { food: 50, production: 50, gold: 49 }
     expect(checkVictory(resources, makeTechState())).toBeNull()
+  })
+})
+
+describe('getResourceThreshold（金融によるしきい値引き下げ、Issue #22）', () => {
+  it('金融（貨幣4段階目）未解放なら通常のしきい値のまま', () => {
+    expect(getResourceThreshold(makeTechState({ currency: 3 }))).toBe(RESOURCE_VICTORY_THRESHOLD)
+  })
+
+  it('金融解放済みならしきい値が20%下がる', () => {
+    const discounted = Math.round(RESOURCE_VICTORY_THRESHOLD * 0.8)
+    expect(getResourceThreshold(makeTechState({ currency: 4 }))).toBe(discounted)
+  })
+
+  it('引き下げられたしきい値はcheckVictoryにも反映される', () => {
+    const techState = makeTechState({ currency: 4 })
+    const threshold = getResourceThreshold(techState)
+    const resources = { food: threshold, production: 0, gold: 0 }
+    expect(checkVictory(resources, techState)).toBe('resource')
+
+    const belowThreshold = { food: threshold - 1, production: 0, gold: 0 }
+    expect(checkVictory(belowThreshold, techState)).toBeNull()
   })
 })
 

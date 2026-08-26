@@ -3,6 +3,8 @@
 // あたり10+20+35+55+80=200、3系統で600）よりだいぶ早く到達できる水準として150とした。
 export const RESOURCE_VICTORY_THRESHOLD = 150
 const REQUIRED_TIER_PER_LINE = 5
+const FINANCE_TIER = 4
+const FINANCE_DISCOUNT_RATE = 0.2
 
 function hasUnlockedAllTechs(techState) {
   return Object.values(techState).every((tier) => tier >= REQUIRED_TIER_PER_LINE)
@@ -12,10 +14,18 @@ function getResourceTotal(resources) {
   return resources.food + resources.production + resources.gold
 }
 
+// 「金融」（貨幣ライン4段階目）を解放した陣営は、資源到達による勝利のしきい値が
+// 20%下がる（Issue #22）。
+export function getResourceThreshold(techState) {
+  return techState.currency >= FINANCE_TIER
+    ? Math.round(RESOURCE_VICTORY_THRESHOLD * (1 - FINANCE_DISCOUNT_RATE))
+    : RESOURCE_VICTORY_THRESHOLD
+}
+
 // 条件を満たしていれば勝因（'tech' | 'resource'）を返し、満たしていなければnullを返す。
 export function checkVictory(resources, techState) {
   if (hasUnlockedAllTechs(techState)) return 'tech'
-  if (getResourceTotal(resources) >= RESOURCE_VICTORY_THRESHOLD) return 'resource'
+  if (getResourceTotal(resources) >= getResourceThreshold(techState)) return 'resource'
   return null
 }
 
@@ -32,7 +42,7 @@ export function determineWinner({ playerResources, playerTech, cpuResources, cpu
 
 const REASON_LABEL = {
   tech: 'テックツリー全15技術を解放した',
-  resource: `資源合計が${RESOURCE_VICTORY_THRESHOLD}に到達した`,
+  resource: '資源合計がしきい値に到達した',
 }
 
 const WINNER_LABEL = { player: '自軍', cpu: 'CPU' }

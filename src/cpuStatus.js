@@ -6,7 +6,7 @@ function renderReadOnlyTechCard(tech, tierIndex, techState, lineKey) {
   const tierNumber = tierIndex + 1
   const isUnlocked = tierNumber <= techState[lineKey]
   const statusLabel = isUnlocked ? '解放済み' : '未解放'
-  const effectLabel = tech.bonus ? `産出+${tech.bonus}` : `${tech.note}（今後実装予定）`
+  const effectLabel = tech.bonus ? `産出+${tech.bonus}` : tech.note
   const tone = isUnlocked ? 'border-emerald-400 bg-emerald-50' : 'border-stone-300 bg-stone-100 opacity-70'
 
   return `

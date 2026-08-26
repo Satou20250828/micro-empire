@@ -65,4 +65,16 @@ describe('applyMysteryEffects', () => {
     expect(events).toEqual([])
     expect(pools.player.food).toBe(0)
   })
+
+  it('lossExemptOwnersに含まれる陣営はロス効果が変化なしになる（産業化の効果、Issue #22）', () => {
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.9).mockReturnValueOnce(0.1)
+    const board = makeBoard([{ row: 2, col: 2, city: null, terrain: 'mystery' }])
+    const workers = [makeWorker('player', 2, 2)]
+    const pools = { player: { food: 5, production: 0, gold: 0 }, cpu: { food: 0, production: 0, gold: 0 } }
+
+    const events = applyMysteryEffects(board, workers, pools, ['player'])
+
+    expect(pools.player.food).toBe(5)
+    expect(events).toEqual([{ workerId: 'player-2-2', owner: 'player', type: 'nothing', resource: null, amount: 0 }])
+  })
 })

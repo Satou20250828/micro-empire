@@ -1,5 +1,6 @@
 const WORKERS_PER_SIDE = 2
 const STAY_LIMIT = 3
+const DEFAULT_MOVE_LIMIT = 1
 
 const DIRECTIONS = [
   { dRow: -1, dCol: 0 },
@@ -20,7 +21,7 @@ function makeWorker(owner, index, cityCell) {
     row: cityCell.row,
     col: cityCell.col,
     turnsAtPosition: 1,
-    movedThisTurn: false,
+    movedThisTurn: 0,
   }
 }
 
@@ -36,6 +37,13 @@ export function createWorkers(board) {
   return workers
 }
 
+// テックツリー「農業革命」（Issue #22）解放時に、対象陣営の都市マスへ労働者を1体追加する。
+export function addWorker(workers, board, owner) {
+  const cityCell = board.cells.find((cell) => cell.city === owner)
+  const index = workers.filter((worker) => worker.owner === owner).length
+  workers.push(makeWorker(owner, index, cityCell))
+}
+
 export function getAdjacentCells(worker, boardSize) {
   return DIRECTIONS.map(({ dRow, dCol }) => ({
     row: worker.row + dRow,
@@ -47,28 +55,34 @@ function isOccupiedByOpponent(workers, owner, row, col) {
   return workers.some((worker) => worker.owner !== owner && worker.row === row && worker.col === col)
 }
 
-export function getValidMoves(workers, worker, boardSize) {
-  if (worker.movedThisTurn) return []
+// moveLimit：1ターンに移動できる回数の上限（テックツリー「機械工学」解放で2になる、Issue #22）。
+export function getValidMoves(workers, worker, boardSize, moveLimit = DEFAULT_MOVE_LIMIT) {
+  if (worker.movedThisTurn >= moveLimit) return []
   return getAdjacentCells(worker, boardSize).filter(
     (pos) => !isOccupiedByOpponent(workers, worker.owner, pos.row, pos.col),
   )
 }
 
-export function canMoveWorker(workers, worker, row, col, boardSize) {
-  return getValidMoves(workers, worker, boardSize).some((pos) => pos.row === row && pos.col === col)
+export function canMoveWorker(workers, worker, row, col, boardSize, moveLimit = DEFAULT_MOVE_LIMIT) {
+  return getValidMoves(workers, worker, boardSize, moveLimit).some(
+    (pos) => pos.row === row && pos.col === col,
+  )
 }
 
 export function moveWorker(worker, row, col) {
   worker.row = row
   worker.col = col
   worker.turnsAtPosition = 1
-  worker.movedThisTurn = true
+  worker.movedThisTurn = (worker.movedThisTurn || 0) + 1
 }
 
 // ターン送り時に呼び出す。今ターン動かなかった労働者の滞在ターン数を進め、
-// 3ターン連続で同じマスにいた労働者は、盤面上の空いている隣接マスへ強制移動させる。
-// その後、全労働者の「このターン移動済みか」フラグをリセットする。
-export function advanceWorkerTurns(workers, boardSize) {
+// 3ターン連続で同じマスにいた労働者は、盤面上の空いている隣接マスへ強制移動させる
+// （ただしexemptOwnersに含まれる陣営は、テックツリー「品種改良」の効果で対象外、Issue #22）。
+// その後、全労働者の「このターン移動した回数」をリセットする。
+export function advanceWorkerTurns(workers, boardSize, exemptOwners = []) {
+  const exemptSet = new Set(exemptOwners)
+
   workers.forEach((worker) => {
     if (!worker.movedThisTurn) {
       worker.turnsAtPosition += 1
@@ -76,8 +90,9 @@ export function advanceWorkerTurns(workers, boardSize) {
   })
 
   workers.forEach((worker) => {
+    if (exemptSet.has(worker.owner)) return
     if (worker.turnsAtPosition > STAY_LIMIT) {
-      const destinations = getValidMoves(workers, { ...worker, movedThisTurn: false }, boardSize)
+      const destinations = getValidMoves(workers, { ...worker, movedThisTurn: 0 }, boardSize)
       if (destinations.length > 0) {
         const destination = destinations[Math.floor(Math.random() * destinations.length)]
         moveWorker(worker, destination.row, destination.col)
@@ -88,7 +103,7 @@ export function advanceWorkerTurns(workers, boardSize) {
   })
 
   workers.forEach((worker) => {
-    worker.movedThisTurn = false
+    worker.movedThisTurn = 0
   })
 }
 
