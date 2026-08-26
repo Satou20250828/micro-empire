@@ -1,3 +1,5 @@
+import { OWNER_STYLES, getWorkersAt } from './workers.js'
+
 const BOARD_SIZE = 5
 const MYSTERY_COUNT = 3
 
@@ -78,30 +80,70 @@ export function createBoard() {
   return { size: BOARD_SIZE, cells }
 }
 
-function renderCell(cell) {
+function renderWorkerBadge(worker, selectedWorkerId) {
+  const style = OWNER_STYLES[worker.owner]
+  const isSelected = worker.id === selectedWorkerId
+  const selection = isSelected ? 'scale-110 ring-2 ring-sky-500' : ''
+  const stayBadge =
+    worker.turnsAtPosition > 1
+      ? `<span class="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-stone-700 text-[10px] font-bold leading-none text-white sm:h-5 sm:w-5 sm:text-xs">${worker.turnsAtPosition}</span>`
+      : ''
+
+  return `
+    <button
+      type="button"
+      data-worker-id="${worker.id}"
+      title="${worker.owner === 'player' ? '自軍の労働者' : 'CPUの労働者'}（滞在${worker.turnsAtPosition}ターン目）"
+      class="relative flex h-8 w-8 items-center justify-center rounded-full text-base shadow sm:h-10 sm:w-10 sm:text-xl ${style.bg} ${style.ring} ${selection}"
+    >${style.emoji}${stayBadge}</button>
+  `
+}
+
+function renderCell(cell, { workersAtCell, selectedWorkerId, isValidMove }) {
   const cityStyle = cell.city ? CITY_STYLES[cell.city] : null
   const terrainMeta = cell.terrain ? TERRAIN_META[cell.terrain] : null
   const tone = cityStyle ? CITY_TONE : terrainMeta.tone
   const ring = cityStyle ? cityStyle.ring : ''
+  const highlight = isValidMove ? 'ring-4 ring-inset ring-sky-500 animate-pulse' : ''
 
   const mainMarkup = cityStyle
-    ? `<span class="text-4xl drop-shadow sm:text-5xl" title="${cityStyle.label}">${cityStyle.emoji}</span>`
-    : `<span class="text-2xl sm:text-3xl" title="${terrainMeta.label}">${terrainMeta.emoji}</span>`
+    ? `<span class="text-3xl drop-shadow sm:text-4xl" title="${cityStyle.label}">${cityStyle.emoji}</span>`
+    : `<span class="text-xl sm:text-2xl" title="${terrainMeta.label}">${terrainMeta.emoji}</span>`
+
+  const workersMarkup = workersAtCell.length
+    ? `
+      <div class="absolute inset-x-0 top-0 flex justify-center gap-1 p-0.5">
+        ${workersAtCell.map((worker) => renderWorkerBadge(worker, selectedWorkerId)).join('')}
+      </div>
+    `
+    : ''
+
+  const highlightOverlay = isValidMove
+    ? '<div class="pointer-events-none absolute inset-0 rounded-md bg-sky-400/40"></div>'
+    : ''
 
   return `
     <div
-      class="relative aspect-square flex items-center justify-center rounded-md border border-green-400/50 ${tone} ${ring}"
+      class="relative aspect-square flex items-center justify-center rounded-md border border-green-400/50 ${tone} ${ring} ${highlight}"
       data-row="${cell.row}"
       data-col="${cell.col}"
       data-terrain="${cell.terrain ?? 'city'}"
-    >${mainMarkup}</div>
+    >${highlightOverlay}${mainMarkup}${workersMarkup}</div>
   `
 }
 
-export function renderBoard(board) {
+export function renderBoard(board, { workers = [], selectedWorkerId = null, validMoves = [] } = {}) {
   return `
-    <div class="mx-auto grid w-[clamp(280px,80vw,580px)] grid-cols-5 gap-1.5">
-      ${board.cells.map(renderCell).join('')}
+    <div class="mx-auto grid w-[clamp(320px,90vw,580px)] grid-cols-5 gap-1.5">
+      ${board.cells
+        .map((cell) =>
+          renderCell(cell, {
+            workersAtCell: getWorkersAt(workers, cell.row, cell.col),
+            selectedWorkerId,
+            isValidMove: validMoves.some((pos) => pos.row === cell.row && pos.col === cell.col),
+          }),
+        )
+        .join('')}
     </div>
   `
 }
