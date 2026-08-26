@@ -3,16 +3,27 @@ import { createBoard, renderBoard } from './board.js'
 import { createResources, renderResources, addResources } from './resources.js'
 import { createTurnState, advanceTurn, renderTurnCounter, renderTurnButton } from './turn.js'
 import { renderPanelButtons } from './panels.js'
+import { createWorkers, getValidMoves, canMoveWorker, moveWorker, advanceWorkerTurns } from './workers.js'
 
 const TURN_YIELD = { food: 2, production: 1, gold: 1 }
 
 const board = createBoard()
 const resources = createResources()
 const turnState = createTurnState()
+const workers = createWorkers(board)
+
+let selectedWorkerId = null
 
 const app = document.querySelector('#app')
 
+function getSelectedWorker() {
+  return workers.find((worker) => worker.id === selectedWorkerId) ?? null
+}
+
 function render() {
+  const selectedWorker = getSelectedWorker()
+  const validMoves = selectedWorker ? getValidMoves(workers, selectedWorker, board.size) : []
+
   app.innerHTML = `
     <main class="relative flex min-h-screen flex-col items-center gap-6 bg-amber-50 p-4 pb-24 text-stone-800">
       <header class="flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
@@ -25,7 +36,7 @@ function render() {
       </header>
 
       <div class="flex flex-1 flex-col items-center justify-center gap-4">
-        ${renderBoard(board)}
+        ${renderBoard(board, { workers, selectedWorkerId, validMoves })}
         <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-stone-600">
           <span>🏰 自都市</span>
           <span>🏯 CPU都市</span>
@@ -33,6 +44,7 @@ function render() {
           <span>⚙️ 生産力</span>
           <span>💰 金</span>
           <span>❓ ？マス</span>
+          <span>🧑‍🌾 労働者（数字は同じマスに滞在中のターン数）</span>
         </div>
       </div>
 
@@ -44,9 +56,39 @@ function render() {
 render()
 
 app.addEventListener('click', (event) => {
-  if (!event.target.closest('#next-turn')) return
+  if (event.target.closest('#next-turn')) {
+    advanceWorkerTurns(workers, board.size)
+    advanceTurn(turnState)
+    addResources(resources, TURN_YIELD)
+    selectedWorkerId = null
+    render()
+    return
+  }
 
-  advanceTurn(turnState)
-  addResources(resources, TURN_YIELD)
+  const workerButton = event.target.closest('[data-worker-id]')
+  if (workerButton) {
+    const clickedId = workerButton.dataset.workerId
+    const clickedWorker = workers.find((worker) => worker.id === clickedId)
+    if (!clickedWorker || clickedWorker.owner !== 'player') return
+
+    selectedWorkerId = selectedWorkerId === clickedId ? null : clickedId
+    render()
+    return
+  }
+
+  const cell = event.target.closest('[data-row]')
+  const selectedWorker = getSelectedWorker()
+  if (cell && selectedWorker) {
+    const row = Number(cell.dataset.row)
+    const col = Number(cell.dataset.col)
+    if (canMoveWorker(workers, selectedWorker, row, col, board.size)) {
+      moveWorker(selectedWorker, row, col)
+      selectedWorkerId = null
+      render()
+      return
+    }
+  }
+
+  selectedWorkerId = null
   render()
 })
