@@ -104,9 +104,7 @@ function renderCell(cell, { workersAtCell, selectedWorkerId, isValidMove }) {
   const terrainMeta = cell.terrain ? TERRAIN_META[cell.terrain] : null
   const tone = cityStyle ? CITY_TONE : terrainMeta.tone
   const ring = cityStyle ? cityStyle.ring : ''
-  const highlight = isValidMove
-    ? 'outline outline-2 outline-offset-[-2px] outline-dashed outline-sky-500'
-    : ''
+  const highlight = isValidMove ? 'ring-4 ring-inset ring-sky-500 animate-pulse' : ''
 
   const mainMarkup = cityStyle
     ? `<span class="text-3xl drop-shadow sm:text-4xl" title="${cityStyle.label}">${cityStyle.emoji}</span>`
@@ -120,13 +118,17 @@ function renderCell(cell, { workersAtCell, selectedWorkerId, isValidMove }) {
     `
     : ''
 
+  const highlightOverlay = isValidMove
+    ? '<div class="pointer-events-none absolute inset-0 rounded-md bg-sky-400/40"></div>'
+    : ''
+
   return `
     <div
       class="relative aspect-square flex items-center justify-center rounded-md border border-green-400/50 ${tone} ${ring} ${highlight}"
       data-row="${cell.row}"
       data-col="${cell.col}"
       data-terrain="${cell.terrain ?? 'city'}"
-    >${mainMarkup}${workersMarkup}</div>
+    >${highlightOverlay}${mainMarkup}${workersMarkup}</div>
   `
 }
 
