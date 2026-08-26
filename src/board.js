@@ -6,6 +6,8 @@ const CITY_STYLES = {
   cpu: { emoji: '🏯', ring: 'ring-4 ring-rose-400', label: 'CPU都市' },
 }
 
+const CITY_TONE = 'bg-stone-200'
+
 const TERRAIN_TYPES = ['food', 'production', 'gold']
 
 const TERRAIN_META = {
@@ -24,8 +26,9 @@ function shuffle(array) {
   return result
 }
 
-// 22マス分の地形をなるべく均等（食料/生産力/金がおよそ7〜8マスずつ）に配りつつ、
-// どのマスがどの地形になるかはシャッフルでランダムに決める。
+// 都市マスを除いた各マスの地形を、なるべく均等（食料/生産力/金がおよそ均等）に配りつつ、
+// どのマスがどの地形になるかはシャッフルでランダムに決める。都市マスはコマの初期配置場所
+// のため地形（？マスも含む）を持たない。
 function assignTerrains(cellCount, mysteryCount) {
   const mysteryIndexes = new Set(shuffle([...Array(cellCount).keys()]).slice(0, mysteryCount))
 
@@ -57,42 +60,41 @@ export function createBoard() {
     }
   }
 
-  const terrains = assignTerrains(cells.length, MYSTERY_COUNT)
-  cells.forEach((cell, index) => {
-    cell.terrain = terrains[index]
-  })
-
-  const cpuCity = cells.find((cell) => cell.row === 0 && cell.col === 0)
-  cpuCity.city = 'cpu'
-
-  const playerCity = cells.find(
+  const cpuCityIndex = cells.findIndex((cell) => cell.row === 0 && cell.col === 0)
+  const playerCityIndex = cells.findIndex(
     (cell) => cell.row === BOARD_SIZE - 1 && cell.col === BOARD_SIZE - 1,
   )
-  playerCity.city = 'player'
+  const cityIndexes = new Set([cpuCityIndex, playerCityIndex])
+
+  const nonCityIndexes = cells.map((_, index) => index).filter((index) => !cityIndexes.has(index))
+  const terrains = assignTerrains(nonCityIndexes.length, MYSTERY_COUNT)
+  nonCityIndexes.forEach((cellIndex, i) => {
+    cells[cellIndex].terrain = terrains[i]
+  })
+
+  cells[cpuCityIndex].city = 'cpu'
+  cells[playerCityIndex].city = 'player'
 
   return { size: BOARD_SIZE, cells }
 }
 
 function renderCell(cell) {
   const cityStyle = cell.city ? CITY_STYLES[cell.city] : null
-  const terrainMeta = TERRAIN_META[cell.terrain]
+  const terrainMeta = cell.terrain ? TERRAIN_META[cell.terrain] : null
+  const tone = cityStyle ? CITY_TONE : terrainMeta.tone
   const ring = cityStyle ? cityStyle.ring : ''
 
   const mainMarkup = cityStyle
     ? `<span class="text-4xl drop-shadow sm:text-5xl" title="${cityStyle.label}">${cityStyle.emoji}</span>`
     : `<span class="text-2xl sm:text-3xl" title="${terrainMeta.label}">${terrainMeta.emoji}</span>`
 
-  const terrainBadge = cityStyle
-    ? `<span class="absolute bottom-0.5 right-0.5 text-xs sm:text-sm" title="${terrainMeta.label}">${terrainMeta.emoji}</span>`
-    : ''
-
   return `
     <div
-      class="relative aspect-square flex items-center justify-center rounded-md border border-green-400/50 ${terrainMeta.tone} ${ring}"
+      class="relative aspect-square flex items-center justify-center rounded-md border border-green-400/50 ${tone} ${ring}"
       data-row="${cell.row}"
       data-col="${cell.col}"
-      data-terrain="${cell.terrain}"
-    >${mainMarkup}${terrainBadge}</div>
+      data-terrain="${cell.terrain ?? 'city'}"
+    >${mainMarkup}</div>
   `
 }
 
