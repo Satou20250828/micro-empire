@@ -15,13 +15,13 @@ export function createBoard() {
     }
   }
 
-  const playerCity = cells.find((cell) => cell.row === 0 && cell.col === 0)
-  playerCity.city = 'player'
+  const cpuCity = cells.find((cell) => cell.row === 0 && cell.col === 0)
+  cpuCity.city = 'cpu'
 
-  const cpuCity = cells.find(
+  const playerCity = cells.find(
     (cell) => cell.row === BOARD_SIZE - 1 && cell.col === BOARD_SIZE - 1,
   )
-  cpuCity.city = 'cpu'
+  playerCity.city = 'player'
 
   return { size: BOARD_SIZE, cells }
 }
@@ -45,7 +45,7 @@ function renderCell(cell) {
 
 export function renderBoard(board) {
   return `
-    <div class="mx-auto grid w-[clamp(280px,75vw,520px)] grid-cols-5 gap-1.5">
+    <div class="mx-auto grid w-[clamp(280px,80vw,580px)] grid-cols-5 gap-1.5">
       ${board.cells.map(renderCell).join('')}
     </div>
   `
