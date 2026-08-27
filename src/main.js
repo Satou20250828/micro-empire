@@ -74,27 +74,29 @@ function render() {
   app.innerHTML = `
     <main class="relative flex min-h-screen flex-col items-center gap-6 bg-amber-50 p-4 text-stone-800">
       <header class="flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
-        <h1 class="text-2xl font-bold text-amber-600 sm:text-3xl">🏛️ 小さな帝国</h1>
+        <h1 class="flex items-center gap-2 text-2xl font-bold text-amber-600 sm:text-3xl">
+          <span class="material-symbols-outlined text-2xl sm:text-3xl">account_balance</span>小さな帝国
+        </h1>
         <div class="flex flex-wrap items-center gap-3">
           ${renderResources(resources)}
           ${renderTurnCounter(turnState)}
           ${renderDifficultySelector(difficulty, Boolean(gameResult))}
           ${renderPanelButtons()}
           ${gameResult ? '' : renderTurnButton()}
-          ${gameResult ? '<span class="rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white">🏁 ゲーム終了</span>' : ''}
+          ${gameResult ? '<span class="inline-flex items-center gap-1 rounded-full bg-stone-800 px-3 py-1 text-xs font-semibold text-white"><span class="material-symbols-outlined text-sm">flag</span>ゲーム終了</span>' : ''}
         </div>
       </header>
 
       <div class="flex flex-1 flex-col items-center justify-center gap-4">
         ${renderBoard(board, { workers, selectedWorkerId, validMoves })}
         <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-stone-600">
-          <span>🏰 自都市</span>
-          <span>🏯 CPU都市</span>
-          <span>🌾 食料</span>
-          <span>⚙️ 生産力</span>
-          <span>💰 金</span>
-          <span>❓ ？マス</span>
-          <span>🧑‍🌾 労働者（数字は同じマスに滞在中のターン数）</span>
+          <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-base text-blue-600">castle</span>自都市</span>
+          <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-base text-rose-600">fort</span>CPU都市</span>
+          <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-base text-lime-700">grass</span>食料</span>
+          <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-base text-amber-700">settings</span>生産力</span>
+          <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-base text-yellow-700">monetization_on</span>金</span>
+          <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-base text-slate-700">help</span>？マス</span>
+          <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-base text-stone-500">person</span>労働者（数字は同じマスに滞在中のターン数）</span>
         </div>
         ${renderMysteryEvents(lastMysteryEvents)}
       </div>

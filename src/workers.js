@@ -10,8 +10,8 @@ const DIRECTIONS = [
 ]
 
 export const OWNER_STYLES = {
-  player: { emoji: '🧑‍🌾', ring: 'ring-2 ring-amber-500', bg: 'bg-amber-100' },
-  cpu: { emoji: '🧑‍🌾', ring: 'ring-2 ring-rose-500', bg: 'bg-rose-100' },
+  player: { icon: 'person', iconColor: 'text-blue-600', ring: 'ring-2 ring-blue-500', bg: 'bg-blue-100' },
+  cpu: { icon: 'person', iconColor: 'text-rose-600', ring: 'ring-2 ring-rose-500', bg: 'bg-rose-100' },
 }
 
 function makeWorker(owner, index, cityCell) {
