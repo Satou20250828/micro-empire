@@ -123,6 +123,12 @@ app.addEventListener('click', (event) => {
     return
   }
 
+  // ネイティブ<select>を開くクリックがここまで到達すると、下の再描画で
+  // select要素自体が作り直され、開いたばかりのドロップダウンが即座に閉じてしまう
+  if (event.target.closest('#difficulty-select')) {
+    return
+  }
+
   if (gameResult) {
     if (event.target.closest('#retry-game')) {
       window.location.reload()
