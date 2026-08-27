@@ -34,7 +34,12 @@
 
 #### 1年前 → 今
 
-**1年前：はじめて自分で作ったプログラム**（[kantanbangomoku](https://github.com/Satou20250828/MyCreations/tree/main/kantanbangomoku)、Python製のテキスト版五目並べ）
+<table>
+<tr>
+<td width="50%" valign="top" align="center">
+
+**1年前：はじめて自分で作ったプログラム**
+[kantanbangomoku](https://github.com/Satou20250828/MyCreations/tree/main/kantanbangomoku)（Python製・テキスト版五目並べ）
 
 ```
     0  1  2  3  4  5  6  7  8  9 
@@ -50,13 +55,20 @@
  8| -  -  -  -  -  -  -  -  -  -  |
  9| -  -  -  -  -  -  -  -  -  -  |
   +------------------------------+
-あなたの番です。座標を入力してください（例: 1 2）
+あなたの番です。座標を入力してください
 > 
 ```
 
+</td>
+<td width="50%" valign="top" align="center">
+
 **今：「小さな帝国」**
 
-![小さな帝国のプレイ画面](docs/screenshots/micro-empire-2026.jpg)
+<img src="docs/screenshots/micro-empire-2026.jpg" width="100%" alt="小さな帝国のプレイ画面" />
+
+</td>
+</tr>
+</table>
 
 #### なぜこのテーマなのか
 題材に選んだのは、以前から思い入れのあるCivilizationです。限られた資源をどう使うか、どの技術を選ぶかなど、自分で考えて戦略を組み立てていくところに面白さを感じていました。
