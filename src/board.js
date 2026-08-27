@@ -4,8 +4,8 @@ const BOARD_SIZE = 5
 const MYSTERY_COUNT = 3
 
 const CITY_STYLES = {
-  player: { emoji: '🏰', ring: 'ring-4 ring-amber-400', label: '自都市' },
-  cpu: { emoji: '🏯', ring: 'ring-4 ring-rose-400', label: 'CPU都市' },
+  player: { icon: 'castle', iconColor: 'text-blue-600', ring: 'ring-4 ring-blue-400', label: '自都市' },
+  cpu: { icon: 'fort', iconColor: 'text-rose-600', ring: 'ring-4 ring-rose-400', label: 'CPU都市' },
 }
 
 const CITY_TONE = 'bg-stone-200'
@@ -13,10 +13,10 @@ const CITY_TONE = 'bg-stone-200'
 const TERRAIN_TYPES = ['food', 'production', 'gold']
 
 const TERRAIN_META = {
-  food: { emoji: '🌾', tone: 'bg-lime-200', label: '食料' },
-  production: { emoji: '⚙️', tone: 'bg-amber-200', label: '生産力' },
-  gold: { emoji: '💰', tone: 'bg-yellow-200', label: '金' },
-  mystery: { emoji: '❓', tone: 'bg-slate-300', label: '？マス' },
+  food: { icon: 'grass', tone: 'bg-lime-200', iconColor: 'text-lime-700', label: '食料' },
+  production: { icon: 'settings', tone: 'bg-amber-200', iconColor: 'text-amber-700', label: '生産力' },
+  gold: { icon: 'monetization_on', tone: 'bg-yellow-200', iconColor: 'text-yellow-700', label: '金' },
+  mystery: { icon: 'help', tone: 'bg-slate-300', iconColor: 'text-slate-700', label: '？マス' },
 }
 
 function shuffle(array) {
@@ -95,7 +95,7 @@ function renderWorkerBadge(worker, selectedWorkerId) {
       data-worker-id="${worker.id}"
       title="${worker.owner === 'player' ? '自軍の労働者' : 'CPUの労働者'}（滞在${worker.turnsAtPosition}ターン目）"
       class="relative flex h-8 w-8 items-center justify-center rounded-full text-base shadow sm:h-10 sm:w-10 sm:text-xl ${style.bg} ${style.ring} ${selection}"
-    >${style.emoji}${stayBadge}</button>
+    ><span class="material-symbols-outlined text-lg sm:text-2xl ${style.iconColor}">${style.icon}</span>${stayBadge}</button>
   `
 }
 
@@ -107,8 +107,8 @@ function renderCell(cell, { workersAtCell, selectedWorkerId, isValidMove }) {
   const highlight = isValidMove ? 'ring-4 ring-inset ring-sky-500 animate-pulse' : ''
 
   const mainMarkup = cityStyle
-    ? `<span class="text-3xl drop-shadow sm:text-4xl" title="${cityStyle.label}">${cityStyle.emoji}</span>`
-    : `<span class="text-xl sm:text-2xl" title="${terrainMeta.label}">${terrainMeta.emoji}</span>`
+    ? `<span class="material-symbols-outlined text-3xl drop-shadow sm:text-4xl ${cityStyle.iconColor}" title="${cityStyle.label}">${cityStyle.icon}</span>`
+    : `<span class="material-symbols-outlined text-xl sm:text-2xl ${terrainMeta.iconColor}" title="${terrainMeta.label}">${terrainMeta.icon}</span>`
 
   const workersMarkup = workersAtCell.length
     ? `
