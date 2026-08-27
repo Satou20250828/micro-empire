@@ -4,7 +4,7 @@
 
 > リポジトリ名は`micro-empire`ですが、ゲームタイトルは「小さな帝国」です。
 
-- サービスURL：（デプロイ後に記載）
+- サービスURL：https://satou20250828.github.io/micro-empire/
 - Qiita記事：（投稿後に記載）
 
 ## 🚀 サービス概要
