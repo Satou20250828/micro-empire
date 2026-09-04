@@ -13,6 +13,8 @@
 - **プレイ体験：** 5×5マスの盤面で、自都市とCPU都市がそれぞれ2体の労働者を動かし、食料・生産力・金の3資源を稼ぎ合うブラウザ完結ゲーム。戦闘要素はなく、CPUは同じ盤面で資源を稼ぎ合う競争相手という位置づけ。3系統×5段階・計15技術のテックツリーをすべて解放するか、資源合計が難易度別のしきい値に到達すると勝利になります
 - **技術の見どころ：** フレームワークを使わないVanilla JSでの状態管理設計／Git Flow・Issue駆動開発によるプロセスの仕組み化／GitHub ActionsによるCI（lint・test）自動化
 
+<img src="docs/screenshots/gameplay.gif" width="100%" alt="小さな帝国のプレイの様子（労働者を移動させてターンを進めると資源が増える基本サイクル）" />
+
 ## 📋 目次
 
 - [🎯 コンセプト・開発背景](#-コンセプト開発背景)
@@ -22,6 +24,7 @@
 - [🤝 AIとの協働について](#-AIとの協働について)
 - [⚙️ 開発環境・構築手順](#️-開発環境構築手順)
 - [📊 設計資料](#-設計資料)
+- [🏗️ インフラ構成図](#️-インフラ構成図)
 - [🚀 今後の展望](#-今後の展望)
 
 ## 🎯 コンセプト・開発背景
@@ -143,7 +146,7 @@
 ## ⚙️ 開発環境・構築手順
 
 ### 動作環境
-- Node.js 20以上
+- Node.js 24以上
 
 ### セットアップ手順
 
@@ -177,10 +180,120 @@ npm run test     # Vitestによるユニットテスト
 
 - 仕様・設計判断の変遷はGitHub Issue（[#1 プロジェクト全体方針・仕様](https://github.com/Satou20250828/micro-empire/issues/1)）のコメント欄に記録しています
 
+### 状態構造図
+
+本アプリはDB（永続化ストレージ）を持たない構成のため、ER図の代わりに、クライアント側で保持している主要な状態オブジェクトの構造を示します。すべてmain.js側の変数に集約し、他のモジュールはこれらを受け取って処理するだけのステートレスな関数として実装しています。
+
+```mermaid
+classDiagram
+    class Board {
+        +number size
+        +Cell[] cells
+    }
+    class Cell {
+        +number row
+        +number col
+        +string city
+        +string terrain
+    }
+    class Worker {
+        +string id
+        +string owner
+        +number row
+        +number col
+        +number turnsAtPosition
+        +number movedThisTurn
+    }
+    class Resources {
+        +number food
+        +number production
+        +number gold
+    }
+    class TechState {
+        +number agriculture
+        +number architecture
+        +number currency
+    }
+    class TurnState {
+        +number turn
+    }
+    Board "1" *-- "25" Cell : cells
+    Worker "0..*" ..> Cell : row/colで現在地を参照
+```
+
+- `Board`：盤面の地形情報のみを保持し、労働者の位置情報は持たない
+- `Worker`：自都市・CPU都市それぞれの労働者。`row`/`col`で現在地を表現し、盤面側とは疎結合
+- `Resources`／`TechState`：自軍・CPUでそれぞれ別インスタンスを持つ
+
+### 画面遷移図
+
+```mermaid
+stateDiagram-v2
+    [*] --> メイン画面
+    メイン画面 --> テックツリーモーダル : 🔬ボタン
+    テックツリーモーダル --> メイン画面 : ✕ / 背景クリック
+    メイン画面 --> CPU状況モーダル : 🤖ボタン
+    CPU状況モーダル --> メイン画面 : ✕ / 背景クリック
+    メイン画面 --> ルール確認モーダル : 📖ボタン
+    ルール確認モーダル --> メイン画面 : ✕ / 背景クリック
+    メイン画面 --> 勝利画面 : 勝利条件達成
+    勝利画面 --> メイン画面 : もう一度プレイ
+```
+
+各モーダルは排他的に開閉する仕組みになっており、いずれか1つを開くと他は自動的に閉じます。
+
+### 画面一覧
+
+<table>
+<tr>
+<td width="50%" valign="top" align="center">
+
+**メイン画面**
+<img src="docs/screenshots/screen-main.jpg" width="100%" alt="メイン画面：5×5マスの盤面と資源・ターン表示" />
+
+</td>
+<td width="50%" valign="top" align="center">
+
+**テックツリーモーダル**
+<img src="docs/screenshots/screen-techtree.jpg" width="100%" alt="テックツリーモーダル：3系統×5段階の技術解放UI" />
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center">
+
+**CPU都市の状況モーダル**
+<img src="docs/screenshots/screen-cpu-status.jpg" width="100%" alt="CPU都市の状況モーダル：CPU側の資源・テック解放状況を閲覧専用で表示" />
+
+</td>
+<td width="50%" valign="top" align="center">
+
+**ルール確認モーダル**
+<img src="docs/screenshots/screen-rules.jpg" width="100%" alt="ルール確認モーダル：ターンの進め方・勝利条件などのゲームルール一覧" />
+
+</td>
+</tr>
+</table>
+
+## 🏗️ インフラ構成図
+
+GitHub Pages＋GitHub Actionsのみで完結する、無料枠内のシンプルな構成です。
+
+```mermaid
+flowchart LR
+    Dev[開発者] -->|push / PR| Repo[GitHubリポジトリ<br/>main / develop]
+    Repo -->|push・PR時| CI[GitHub Actions: CI<br/>lint → test → build]
+    Repo -->|mainへのpush時| DeployWF[GitHub Actions: Deploy]
+    DeployWF -->|npm run build| Artifact[ビルド成果物 dist/]
+    Artifact -->|upload-pages-artifact| Pages[GitHub Pages]
+    Pages -->|配信| User[プレイヤーのブラウザ]
+```
+
+- **CI**：`develop`／`main`への push・PR時に、lint・test・buildを自動実行（`.github/workflows/ci.yml`）
+- **デプロイ**：`main`へのpush時にのみ、ビルドしてGitHub Pagesへ自動デプロイ（`.github/workflows/deploy.yml`）
+- サーバーやDBを持たないため、インフラコストは常に0円
+
 ## 🚀 今後の展望
 
-- **モーダル内アイコンのフォント化**：テックツリー・CPU状況・ルール確認・勝利画面に残っている絵文字を、Material Symbolsへ置き換える
-- **CPU AIの強化**：現状は「近くの資源マスへ移動する」程度のシンプルなロジック。テック解放の優先順位付けなど、戦略性のある判断を持たせる
-- **スマホ幅での表示・操作性の調整**：実機確認が未実施のまま残っている
 - **盤面タイルの六角形化**：現在は正方形マスの5×5グリッド。六角形タイルにすることで、隣接方向が4方向から6方向に増え、より戦略性のある盤面にできないか検討する
 - **盤面サイズの拡張検討**：現在は5×5マス固定。労働者移動方式で遊んでみた結果を踏まえて、盤面を広げるかどうかを検討する
