@@ -228,18 +228,22 @@ classDiagram
 ### 画面遷移図
 
 ```mermaid
-flowchart TD
+flowchart LR
     Main(["メイン画面"])
-    Tech[["🔬 テックツリー<br/>モーダル"]]
-    Cpu[["🤖 CPU状況<br/>モーダル"]]
-    Rules[["📖 ルール確認<br/>モーダル"]]
     Victory[["🏆 勝利画面"]]
+
+    subgraph Modals["モーダル群 - 排他的に開閉"]
+        Tech[["🔬 テックツリー"]]
+        Cpu[["🤖 CPU状況"]]
+        Rules[["📖 ルール確認"]]
+    end
 
     Main <--> Tech
     Main <--> Cpu
     Main <--> Rules
-    Main -.->|勝利条件達成| Victory
-    Victory -->|もう一度プレイ| Main
+
+    Main == 勝利条件達成 ==> Victory
+    Victory == もう一度プレイ ==> Main
 ```
 
 各モーダルはボタンで開き、✕ボタンまたは背景クリックでメイン画面に戻ります。いずれか1つを開くと他のモーダルは自動的に閉じる、排他的な開閉の仕組みです。
